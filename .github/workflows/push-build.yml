@@ -1,0 +1,50 @@
+name: Push Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - master
+    tags-ignore:
+    - '*'
+    paths:
+    - src/**
+
+env:
+  AUTO_TAG: latest
+
+jobs:
+  push_build:
+    name: Push Build
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Cache node modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock', '**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Install Dependencies
+      run: yarn install
+
+    - name: Build
+      run: yarn build
+
+    - name: Commit Build
+      run: |
+        git config --global user.name 'Push Build'
+        git config --global user.email '<>'
+        git add dist/index.js -f
+        git commit -m "Push Build $(date -u)" || true
+        git push

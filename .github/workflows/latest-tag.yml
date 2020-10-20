@@ -1,0 +1,28 @@
+name: Latest Tag
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+env:
+  AUTO_TAG: latest
+
+jobs:
+  latest_tag:
+    name: Latest Tag
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Update Latest Tag
+      uses: Trinovantes/action-automatic-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        title: Latest
+        automatic_release_tag: ${{ env.AUTO_TAG }}
+        is_prerelease: false
