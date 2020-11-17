@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - master
+      - master
     tags-ignore:
-    - '*'
+      - '*'
     paths:
-    - src/**
+      - src/**
 
 jobs:
   push_build:
@@ -16,28 +16,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock', '**/package-lock.json') }}
 
-    - name: Cache node_modules
-      uses: actions/cache@v2
-      env:
-        cache-name: cache-node-modules
-      with:
-        path: '**/node_modules'
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock', '**/package-lock.json') }}
+      - name: Install Dependencies
+        run: yarn install
 
-    - name: Install Dependencies
-      run: yarn install
+      - name: Build
+        run: yarn build
 
-    - name: Build
-      run: yarn build
-
-    - name: Commit Build
-      run: |
-        git config --global user.name 'Push Build'
-        git config --global user.email '<>'
-        git add dist/index.js -f
-        git commit -m "Push Build $(date -u)" || true
-        git push
+      - name: Commit Build
+        run: |
+          git config --global user.name 'Push Build'
+          git config --global user.email '<>'
+          git add dist/index.js -f
+          git commit -m "Push Build $(date -u)" || true
+          git push
