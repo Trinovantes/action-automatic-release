@@ -11,7 +11,7 @@ This is a fork of [marvinpinto/action-automatic-releases](https://github.com/mar
 | Input                | Description                                                | Default  |
 | -------------------- | ---------------------------------------------------------- | -------- |
 | `auto_release_tag`   | Tag name to use for automatic releases, e.g `nightly`.     | `''`     |
-| `auto_release_title` | Release title for automatic release e.g. `Nightly`         | `''`     |
+| `auto_release_title` | Release title for automatic release e.g. `Nightly Build`   | `''`     |
 | `is_draft`           | Mark this release as a draft?                              | `false`  |
 | `is_prerelease`      | Mark this release as a pre-release?                        | `true`   |
 
