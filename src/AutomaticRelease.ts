@@ -87,12 +87,12 @@ export default class AutomaticRelease {
             this.releaseTag = autoTag
             this.prevReleaseTag = autoTag
         } else {
-            this.releaseTag = getGitTag(this.context.ref)
-
-            if (!this.releaseTag) {
-                throw new Error(`The parameter "automatic_release_tag" was not set and this does not appear to be a GitHub tag event. (Event: ${this.context.ref})`)
+            const gitTag = getGitTag(this.context.ref)
+            if (!gitTag) {
+                throw new Error(`The parameter "auto_release_tag" was not set but this does not appear to be a GitHub tag event. (Event: ${this.context.ref})`)
             }
 
+            this.releaseTag = gitTag
             this.prevReleaseTag = await this.searchForPreviousReleaseTag()
         }
 
