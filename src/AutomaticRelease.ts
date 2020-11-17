@@ -50,9 +50,9 @@ export default class AutomaticRelease {
         await this.determineHeadRef()
         await this.determineReleaseTags()
 
-        if (this.args.automaticReleaseTag) {
-            await this.deleteRelease(this.args.automaticReleaseTag)
-            await this.recreateTag(this.args.automaticReleaseTag)
+        if (this.args.autoReleaseTag) {
+            await this.deleteRelease(this.args.autoReleaseTag)
+            await this.recreateTag(this.args.autoReleaseTag)
         }
 
         const { releaseId, uploadUrl } = await this.createRelease()
@@ -80,7 +80,7 @@ export default class AutomaticRelease {
     }
 
     private async determineReleaseTags(): Promise<void> {
-        const autoTag = this.args.automaticReleaseTag
+        const autoTag = this.args.autoReleaseTag
         core.startGroup(`Determining release tags ${autoTag}`)
 
         if (autoTag) {
@@ -220,7 +220,7 @@ export default class AutomaticRelease {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
             tag_name: this.releaseTag,
-            name: (this.args.automaticReleaseTag && this.args.releaseTitle) ? this.args.releaseTitle : this.releaseTag,
+            name: (this.args.autoReleaseTitle && this.args.autoReleaseTag) ? this.args.autoReleaseTitle : this.releaseTag,
             draft: this.args.isDraft,
             prerelease: this.args.isPreRelease,
             body: changeLog.toString(),

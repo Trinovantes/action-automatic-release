@@ -23,6 +23,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        title: Latest
-        automatic_release_tag: ${{ env.AUTO_TAG }}
+        auto_release_tag: ${{ env.AUTO_TAG }}
+        auto_release_title: Latest
         is_prerelease: false
