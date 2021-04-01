@@ -1,8 +1,7 @@
-'use strict'
+import path from 'path'
+import webpack from 'webpack'
 
-const path = require('path')
-
-const Config = {
+const Config: webpack.Configuration = {
     target: 'node',
     mode: 'production',
     entry: path.resolve(__dirname, './src/index.ts'),
@@ -31,4 +30,4 @@ const Config = {
     },
 }
 
-module.exports = Config
+export default Config

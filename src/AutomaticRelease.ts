@@ -19,8 +19,8 @@ function exportOutput(name: string, value: string | number) {
 }
 
 type ParsedTag = {
-    name: string,
-    semverName: string,
+    name: string
+    semverName: string
 }
 
 // ----------------------------------------------------------------------------
@@ -206,7 +206,7 @@ export default class AutomaticRelease {
         core.endGroup()
     }
 
-    private async createRelease(): Promise<{ releaseId: number, uploadUrl: string }> {
+    private async createRelease(): Promise<{ releaseId: number; uploadUrl: string }> {
         core.startGroup(`Creating new GitHub release for the "${this.releaseTag}" tag`)
 
         core.info('Generating Release Log')

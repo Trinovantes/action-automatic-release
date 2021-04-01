@@ -157,6 +157,8 @@ export default class ChangeLog {
 
         core.info('Determining state of the previous release')
         let previousReleaseRef: string
+
+        // eslint-disable-next-line no-lone-blocks
         {
             try {
                 core.info(`Searching for SHA corresponding to previous "${prevRef}" release tag`)
@@ -177,6 +179,8 @@ export default class ChangeLog {
 
         core.info(`Retrieving commits between ${previousReleaseRef} and ${headSha}`)
         const parsedCommits: Array<ParsedCommit> = []
+
+        // eslint-disable-next-line no-lone-blocks
         {
             try {
                 const compareResult = await this.client.repos.compareCommits({
@@ -189,7 +193,7 @@ export default class ChangeLog {
                     parsedCommits.push({
                         isBreakingChange: false,
 
-                        authorName: commit.commit.author.name,
+                        authorName: commit.commit.author?.name ?? '',
                         origMessage: commit.commit.message,
                         htmlUrl: commit.html_url,
                         sha: commit.sha,
