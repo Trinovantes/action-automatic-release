@@ -1,6 +1,7 @@
 name: Automatic Release
 author: Trinovantes
-description: Automatically creates a release
+description: Automatically creates a GitHub release with changelog
+
 inputs:
   auto_release_tag:
     description: Git tag (for automatic release)
@@ -16,6 +17,7 @@ inputs:
     description: Should this release be marked as a pre-release?
     required: false
     default: true
+
 outputs:
   tag:
     description: The release tag this action just created/updated
@@ -25,6 +27,7 @@ outputs:
     description: The id of the release this action just created
   upload_url:
     description: The upload url of the release this action just created
+
 runs:
   using: node12
   main: dist/index.js
