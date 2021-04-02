@@ -14,6 +14,7 @@ This is a fork of [marvinpinto/action-automatic-releases](https://github.com/mar
 | `auto_release_title` | Release title for automatic release e.g. `Nightly Build`   | `''`     |
 | `is_draft`           | Mark this release as a draft?                              | `false`  |
 | `is_prerelease`      | Mark this release as a pre-release?                        | `true`   |
+| `branch`             | Git branch                                                 | `master` |
 
 If `auto_release_tag` is set, then this action will delete the previous release with the same tag and recreate it with the current tag. Otherwise, this action will create a new release with the current tag.
 

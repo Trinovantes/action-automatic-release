@@ -5,9 +5,6 @@ import { Octokit } from '@octokit/rest'
 import { EOL } from 'os'
 import { sync as commitParser } from 'conventional-commits-parser'
 
-import { Args } from './Args'
-import { getGitTag } from './utils'
-
 // ----------------------------------------------------------------------------
 // Constants
 // ----------------------------------------------------------------------------
@@ -30,19 +27,16 @@ enum ConventionalCommitTypes {
 
 type ParsedCommit = {
     isBreakingChange: boolean
-
     authorName: string
-    origMessage: string
     htmlUrl: string
     sha: string
 
-    type?: string
-    header?: string
-    footer?: string
-    body?: string
-    merge?: string
-    scope?: string
-    subject?: string
+    type?: string | null
+    header?: string | null
+    footer?: string | null
+    body?: string | null
+    scope?: string | null
+    subject?: string | null
 
     pullRequests: Array<{
         number: number
@@ -56,7 +50,7 @@ type ParsedCommit = {
 
 function isBreakingChange(body: string | null, footer: string | null): boolean {
     const re = /^BREAKING\s+CHANGES?:\s+/
-    return re.test(body || '') || re.test(footer || '')
+    return re.test(body ?? '') || re.test(footer ?? '')
 }
 
 function getFormattedChangeLogEntry(commit: ParsedCommit): string {
@@ -127,21 +121,18 @@ function generateChangeLogFromParsedCommits(parsedCommits: Array<ParsedCommit>):
 // ----------------------------------------------------------------------------
 
 export default class ChangeLog {
-    readonly args: Args
     client: InstanceType<typeof GitHub>
     context: Context
 
     parsedCommits: Array<ParsedCommit> = []
 
-    constructor(args: Args) {
-        this.args = args
+    constructor() {
         this.client = new Octokit({ auth: process.env.GITHUB_TOKEN })
         this.context = new Context()
     }
 
     async run(prevReleaseTag: string, headSha: string): Promise<void> {
-        const commits = await this.getCommitsSinceLastRelease(prevReleaseTag, headSha)
-        this.parsedCommits = await this.parseCommits(commits)
+        this.parsedCommits = await this.getCommitsSinceLastRelease(prevReleaseTag, headSha)
     }
 
     toString(): string {
@@ -149,129 +140,71 @@ export default class ChangeLog {
     }
 
     private async getCommitsSinceLastRelease(prevReleaseTag: string, headSha: string): Promise<Array<ParsedCommit>> {
-        core.info('Retrieving commit history')
+        try {
+            const prevRef = `tags/${prevReleaseTag}`
 
-        const prevRef = `tags/${prevReleaseTag}`
-        const owner = this.context.repo.owner
-        const repo = this.context.repo.repo
-
-        core.info('Determining state of the previous release')
-        let previousReleaseRef: string
-
-        // eslint-disable-next-line no-lone-blocks
-        {
-            try {
-                core.info(`Searching for SHA corresponding to previous "${prevRef}" release tag`)
-
-                // Check if the tag exists or throw error
-                await this.client.git.getRef({
-                    owner: owner,
-                    repo: repo,
-                    ref: prevRef,
-                })
-                previousReleaseRef = getGitTag(prevRef)
-            } catch (e) {
-                const error = e as Error
-                core.info(`Could not find SHA corresponding to tag "${prevRef}" (${error.message}). Assuming this is the first release.`)
-                previousReleaseRef = 'HEAD'
+            // Check if the tag exists
+            // e.g. when we have an autoReleaseTag, the tag may not exist first time that this action runs
+            await this.client.git.getRef({
+                ...this.context.repo,
+                ref: prevRef,
+            })
+        } catch (e) {
+            // Not Found errors are acceptable because it's the first release
+            const error = e as Error
+            if (error.message !== 'Not Found') {
+                throw error
             }
+
+            core.info(`Failed to verify "${prevReleaseTag}" exists. Assume that this is the first time this GitHub Action is being run.`)
+            prevReleaseTag = 'HEAD'
         }
 
-        core.info(`Retrieving commits between ${previousReleaseRef} and ${headSha}`)
-        const parsedCommits: Array<ParsedCommit> = []
+        try {
+            core.info(`Retrieving commits between ${prevReleaseTag} and ${headSha}`)
+            const compareResult = await this.client.repos.compareCommits({
+                ...this.context.repo,
+                base: prevReleaseTag,
+                head: headSha,
+            })
 
-        // eslint-disable-next-line no-lone-blocks
-        {
-            try {
-                const compareResult = await this.client.repos.compareCommits({
-                    owner: owner,
-                    repo: repo,
-                    base: previousReleaseRef,
-                    head: headSha,
-                })
-                for (const commit of compareResult.data.commits) {
-                    parsedCommits.push({
-                        isBreakingChange: false,
+            const parsedCommits: Array<ParsedCommit> = []
+            for (const commit of compareResult.data.commits) {
+                core.info(`Processing commit ${commit.sha}`)
 
-                        authorName: commit.commit.author?.name ?? '',
-                        origMessage: commit.commit.message,
-                        htmlUrl: commit.html_url,
-                        sha: commit.sha,
-
-                        pullRequests: [],
-                    })
+                const parsedCommit = commitParser(commit.commit.message)
+                if (parsedCommit.merge || parsedCommit.header?.startsWith('Merge')) {
+                    core.info(`Skipping merge commit ${commit.sha}`)
+                    continue
                 }
 
-                core.info(`Successfully retrieved ${compareResult.data.commits.length} commits between ${previousReleaseRef} and ${headSha}`)
-            } catch (e) {
-                core.info(`Could not find any commits between ${previousReleaseRef} and ${headSha}`)
+                const pullRequests = await this.client.repos.listPullRequestsAssociatedWithCommit({
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    commit_sha: commit.sha,
+                })
+
+                parsedCommits.push({
+                    ...parsedCommit,
+
+                    isBreakingChange: isBreakingChange(parsedCommit.body, parsedCommit.footer),
+                    authorName: commit.commit.author?.name ?? 'Unknown Author',
+                    htmlUrl: commit.html_url,
+                    sha: commit.sha,
+
+                    pullRequests: pullRequests.data.map((pr) => {
+                        return {
+                            number: pr.number,
+                            url: pr.html_url,
+                        }
+                    }),
+                })
             }
+
+            core.info(`Successfully retrieved ${parsedCommits.length} commits between ${prevReleaseTag} and ${headSha}`)
+            return parsedCommits
+        } catch (e) {
+            throw new Error(`Failed to get commits between ${prevReleaseTag} and ${headSha}`)
         }
-
-        core.info(JSON.stringify(parsedCommits))
-        return parsedCommits
-    }
-
-    private async parseCommits(commits: Array<ParsedCommit>): Promise<Array<ParsedCommit>> {
-        core.info('Parsing Commits')
-
-        for (const commit of commits) {
-            core.info(`Processing commit: ${JSON.stringify(commit)}`)
-
-            core.info(`Searching for pull requests associated with commit ${commit.sha}`)
-            const pulls = await this.client.repos.listPullRequestsAssociatedWithCommit({
-                owner: this.context.repo.owner,
-                repo: this.context.repo.repo,
-                commit_sha: commit.sha,
-            })
-            core.info(`Found ${pulls.data.length} pull request(s) associated with commit ${commit.sha}`)
-
-            const parsedCommit = commitParser(commit.origMessage)
-            core.info(`Parsed commit: ${JSON.stringify(parsedCommit)}`)
-
-            if (commit.merge) {
-                core.info(`Ignoring merge commit: ${commit.merge}`)
-                continue
-            }
-
-            if (parsedCommit.type) {
-                commit.type = parsedCommit.type
-            }
-
-            if (parsedCommit.header) {
-                commit.header = parsedCommit.header
-            }
-
-            if (parsedCommit.footer) {
-                commit.footer = parsedCommit.footer
-            }
-
-            if (parsedCommit.body) {
-                commit.body = parsedCommit.body
-            }
-
-            if (parsedCommit.merge) {
-                commit.merge = parsedCommit.merge
-            }
-
-            if (parsedCommit.scope) {
-                commit.scope = parsedCommit.scope
-            }
-
-            if (parsedCommit.subject) {
-                commit.subject = parsedCommit.subject
-            }
-
-            commit.isBreakingChange = isBreakingChange(parsedCommit.body, parsedCommit.footer)
-            commit.pullRequests = pulls.data.map((pr) => {
-                return {
-                    number: pr.number,
-                    url: pr.html_url,
-                }
-            })
-        }
-
-        core.info(JSON.stringify(commits))
-        return commits
     }
 }

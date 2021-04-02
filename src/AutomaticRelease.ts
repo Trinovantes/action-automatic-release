@@ -1,183 +1,116 @@
 import * as core from '@actions/core'
-import { GitHub } from '@actions/github/lib/utils'
 import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
-import { valid as semverValid, rcompare as semverRcompare, lt as semverLt } from 'semver'
-
+import { getAndValidateArgs, IArgs } from './Args'
 import ChangeLog from './ChangeLog'
-import { Args, getAndValidateArgs } from './Args'
-import { getGitTag } from './utils'
-
-// ----------------------------------------------------------------------------
-// Helpers
-// ----------------------------------------------------------------------------
-
-function exportOutput(name: string, value: string | number) {
-    core.info(`Exporting env variable ${name}=${value}`)
-    core.exportVariable(name.toUpperCase(), value)
-    core.setOutput(name.toLowerCase(), value)
-}
-
-type ParsedTag = {
-    name: string
-    semverName: string
-}
+import { exportOutput, extractTagName, GitHubClient, searchPrevReleaseTag } from './utils'
 
 // ----------------------------------------------------------------------------
 // AutomaticRelease
 // ----------------------------------------------------------------------------
 
 export default class AutomaticRelease {
-    readonly args: Args
-    client: InstanceType<typeof GitHub>
-    context: Context
-
-    sha: string = ''
-    releaseTag: string = ''
-    prevReleaseTag: string = ''
+    readonly args: IArgs
+    readonly client: GitHubClient
+    readonly context: Context
 
     constructor() {
         core.startGroup('Initializing AutomaticRelease')
+
         this.args = getAndValidateArgs()
+        console.log(this.args)
+
         this.client = new Octokit({ auth: process.env.GITHUB_TOKEN })
         this.context = new Context()
-        core.endGroup()
+        console.log(`owner:${this.context.repo.owner} repo:${this.context.repo.repo}`)
 
-        core.info(`owner:${this.context.repo.owner} repo:${this.context.repo.repo}`)
+        core.endGroup()
     }
 
     async run(): Promise<void> {
-        await this.determineHeadRef()
-        await this.determineReleaseTags()
+        const head = await this.determineHeadRef()
+
+        // --------------------------------------------------------------------
+        // Determine the start/end tags
+        // --------------------------------------------------------------------
+
+        core.startGroup('Determining release tags')
+
+        let currReleaseTag: string
+        let prevReleaseTag: string
+
+        if (this.args.autoReleaseTag) {
+            currReleaseTag = this.args.autoReleaseTag
+            prevReleaseTag = this.args.autoReleaseTag
+        } else {
+            const currentTag = extractTagName(this.context.ref)
+            currReleaseTag = currentTag
+            prevReleaseTag = await searchPrevReleaseTag(this.client, this.context.repo, currentTag) ?? currentTag
+        }
+
+        console.log(`currReleaseTag:${currReleaseTag} prevReleaseTag:${prevReleaseTag}`)
+        core.endGroup()
+
+        // --------------------------------------------------------------------
+        // Determine changelog
+        // --------------------------------------------------------------------
+
+        core.startGroup('Generating release tags')
+
+        const changeLog = new ChangeLog()
+        await changeLog.run(prevReleaseTag, head)
+
+        core.endGroup()
+
+        // --------------------------------------------------------------------
+        // Delete and recreate the autoReleaseTag if necessary
+        // --------------------------------------------------------------------
 
         if (this.args.autoReleaseTag) {
             await this.deleteRelease(this.args.autoReleaseTag)
-            await this.recreateTag(this.args.autoReleaseTag)
+            await this.createOrUpdateTag(this.args.autoReleaseTag, head)
         }
 
-        const { releaseId, uploadUrl } = await this.createRelease()
+        // --------------------------------------------------------------------
+        // Create new release for the currReleaseTag
+        // --------------------------------------------------------------------
+
+        const releaseName: string = (this.args.autoReleaseTag)
+            ? this.args.autoReleaseTitle || currReleaseTag
+            : currReleaseTag
+
+        const { releaseId, uploadUrl } = await this.createRelease(currReleaseTag, releaseName, changeLog.toString())
+
+        // --------------------------------------------------------------------
+        // Finally export the outputs
+        // --------------------------------------------------------------------
 
         core.startGroup('Exporting Outputs')
-        exportOutput('tag', this.releaseTag)
-        exportOutput('prev_tag', this.prevReleaseTag)
+        exportOutput('tag', currReleaseTag)
+        exportOutput('prev_tag', prevReleaseTag)
         exportOutput('release_id', releaseId)
         exportOutput('upload_url', uploadUrl)
         core.endGroup()
     }
 
-    private async determineHeadRef(): Promise<void> {
+    private async determineHeadRef(): Promise<string> {
         core.startGroup('Determining head ref')
 
-        const resp = await this.client.git.getRef({
+        const res = await this.client.git.getRef({
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            ref: 'heads/master',
+            ref: `heads/${this.args.branch}`,
         })
 
-        this.sha = resp.data.object.sha
-        core.info(`HEAD: ${this.sha}`)
-        core.endGroup()
-    }
-
-    private async determineReleaseTags(): Promise<void> {
-        const autoTag = this.args.autoReleaseTag
-        core.startGroup(`Determining release tags ${autoTag}`)
-
-        if (autoTag) {
-            this.releaseTag = autoTag
-            this.prevReleaseTag = autoTag
-        } else {
-            const gitTag = getGitTag(this.context.ref)
-            if (!gitTag) {
-                throw new Error(`The parameter "auto_release_tag" was not set but this does not appear to be a GitHub tag event. (Event: ${this.context.ref})`)
-            }
-
-            this.releaseTag = gitTag
-            this.prevReleaseTag = await this.searchForPreviousReleaseTag()
-        }
-
-        core.info(`releaseTag:${this.releaseTag} prevReleaseTag:${this.prevReleaseTag}`)
-        core.endGroup()
-    }
-
-    private async searchForPreviousReleaseTag(): Promise<string> {
-        const validSemver = semverValid(this.releaseTag)
-        if (!validSemver) {
-            throw new Error(`The parameter "automatic_release_tag" was not set and the current tag "${this.releaseTag}" does not appear to conform to semantic versioning.`)
-        }
-
-        const listTagsOptions = this.client.repos.listTags.endpoint.merge(this.context.repo)
-        const tl = await this.client.paginate(listTagsOptions) as Array<ParsedTag>
-
-        const tagList = tl
-            .map((tag) => {
-                return {
-                    name: tag.name,
-                    semverName: semverValid(tag.name) || '',
-                }
-            })
-            .filter((tag) => !!tag.semverName)
-            .sort((a, b) => semverRcompare(a.semverName, b.semverName))
-
-        let previousReleaseTag = ''
-        for (const tag of tagList) {
-            if (semverLt(tag.semverName, this.releaseTag)) {
-                previousReleaseTag = tag.name
-                break
-            }
-        }
-
-        return previousReleaseTag
-    }
-
-    private async recreateTag(tag: string): Promise<void> {
-        core.startGroup('Generating release tag')
-
-        const ref = `refs/tags/${tag}`
-        const existingRef = `tags/${tag}`
-
-        try {
-            core.info(`Attempting to create release tag "${tag}" ${this.sha}`)
-            await this.client.git.createRef({
-                owner: this.context.repo.owner,
-                repo: this.context.repo.repo,
-                sha: this.sha,
-                ref: ref,
-            })
-
-            core.info(`Successfully created release tag "${tag}"`)
-        } catch (e) {
-            const error = e as Error
-
-            // 'Reference already exists' errors are acceptable because then we just need to update it
-            if (error.message !== 'Reference already exists') {
-                core.error(`Failed to create new tag "${ref}" (${error.message})`)
-                throw error
-            }
-
-            try {
-                console.info(`Attempting to update existing tag "${existingRef}"`)
-                await this.client.git.updateRef({
-                    owner: this.context.repo.owner,
-                    repo: this.context.repo.repo,
-                    sha: this.sha,
-                    ref: existingRef,
-                    force: true,
-                })
-            } catch (e) {
-                const error = e as Error
-                core.error(`Failed to update ref "${existingRef}" (${error.message})`)
-                throw error
-            }
-
-            core.info(`Successfully updated release tag "${tag}"`)
-        }
+        const head = res.data.object.sha
+        core.info(`HEAD: ${head}`)
 
         core.endGroup()
+        return head
     }
 
-    private async deleteRelease(tag: string): Promise<void> {
-        core.startGroup(`Deleting GitHub release associated with the tag "${tag}"`)
+    async deleteRelease(tag: string): Promise<void> {
+        core.startGroup(`Deleting GitHub Release associated with the tag "${tag}"`)
 
         core.info(`Searching for release corresponding to the "${tag}" tag`)
         try {
@@ -206,30 +139,73 @@ export default class AutomaticRelease {
         core.endGroup()
     }
 
-    private async createRelease(): Promise<{ releaseId: number; uploadUrl: string }> {
-        core.startGroup(`Creating new GitHub release for the "${this.releaseTag}" tag`)
+    async createOrUpdateTag(tag: string, head: string): Promise<void> {
+        core.startGroup(`Creating GitHub Release tag "${tag}"`)
 
-        core.info('Generating Release Log')
-        const changeLog = new ChangeLog(this.args)
-        await changeLog.run(this.prevReleaseTag, this.sha)
+        if (!head) {
+            throw new Error('Invalid HEAD')
+        }
 
-        core.info('Release Log:')
-        core.info(changeLog.toString())
+        const ref = `refs/tags/${tag}`
+        const existingRef = `tags/${tag}`
+
+        try {
+            core.info(`Attempting to create release tag "${tag}" for ${head}`)
+            await this.client.git.createRef({
+                owner: this.context.repo.owner,
+                repo: this.context.repo.repo,
+                sha: head,
+                ref: ref,
+            })
+
+            core.info(`Successfully created release tag "${tag}"`)
+        } catch (err) {
+            const error = err as Error
+
+            // 'Reference already exists' errors are acceptable because then we just need to update it
+            if (error.message !== 'Reference already exists') {
+                core.error(`Failed to create new tag "${ref}" (${error.message})`)
+                throw error
+            }
+
+            try {
+                core.info(`Attempting to update existing tag "${existingRef}"`)
+                await this.client.git.updateRef({
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    sha: head,
+                    ref: existingRef,
+                    force: true,
+                })
+            } catch (err) {
+                const error = err as Error
+                core.error(`Failed to update ref "${existingRef}" (${error.message})`)
+                throw error
+            }
+
+            core.info(`Successfully updated release tag "${tag}"`)
+        }
+
+        core.endGroup()
+    }
+
+    async createRelease(tag: string, releaseName: string, changeLog: string): Promise<{ releaseId: number; uploadUrl: string }> {
+        core.startGroup(`Creating new GitHub release for the "${tag}" tag`)
 
         const releaseConfig = {
             owner: this.context.repo.owner,
             repo: this.context.repo.repo,
-            tag_name: this.releaseTag,
-            name: (this.args.autoReleaseTitle && this.args.autoReleaseTag) ? this.args.autoReleaseTitle : this.releaseTag,
+            tag_name: tag,
+            name: releaseName,
             draft: this.args.isDraft,
             prerelease: this.args.isPreRelease,
-            body: changeLog.toString(),
+            body: changeLog,
         }
         let releaseId = -1
         let uploadUrl = ''
 
         try {
-            core.info(`Creating new release for the "${this.releaseTag}" tag`)
+            core.info(`Creating new release for the "${tag}" tag`)
 
             const resp = await this.client.repos.createRelease(releaseConfig)
             releaseId = resp.data.id
@@ -246,12 +222,11 @@ export default class AutomaticRelease {
             }
 
             try {
-                console.info(`Attempting to update existing release for the "${this.releaseTag}" tag`)
-
+                core.info(`Attempting to update existing release for the "${tag}" tag`)
                 {
                     const resp = await this.client.repos.getReleaseByTag({
                         ...releaseConfig,
-                        tag: this.releaseTag,
+                        tag: tag,
                     })
 
                     releaseId = resp.data.id
@@ -259,7 +234,6 @@ export default class AutomaticRelease {
                 }
 
                 core.info(`Successfully fetched release ${releaseId}: ${uploadUrl}`)
-
                 {
                     const resp = await this.client.repos.updateRelease({
                         ...releaseConfig,
