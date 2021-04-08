@@ -70,7 +70,7 @@ function getFormattedChangeLogEntry(commit: ParsedCommit): string {
 
         entry = `${commit.subject}${prString} ([${author}](${url}))`
     } else {
-        entry = `[[${shortSha}](${url})]: ${commit.header} (${author}) ${prString}`
+        entry = `[\`${shortSha}\`](${url}): ${commit.header} (${author}) ${prString}`
     }
 
     return entry
