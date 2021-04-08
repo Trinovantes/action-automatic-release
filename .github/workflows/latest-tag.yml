@@ -18,7 +18,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Update Latest Tag
+      - name: Update Current Release
+        id: update_current
+        uses: Trinovantes/action-automatic-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          is_prerelease: false
+
+      - name: Update Latest Build Release
         uses: Trinovantes/action-automatic-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
