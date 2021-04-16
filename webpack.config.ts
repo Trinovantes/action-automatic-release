@@ -5,7 +5,7 @@ import webpack from 'webpack'
 const isDev = (process.env.NODE_ENV === 'development')
 const srcDir = path.resolve(__dirname, 'src')
 
-const Config: webpack.Configuration = {
+const config: webpack.Configuration = {
     target: 'node',
     mode: isDev
         ? 'development'
@@ -44,4 +44,4 @@ const Config: webpack.Configuration = {
     },
 }
 
-export default Config
+export default config
