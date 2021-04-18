@@ -131,5 +131,10 @@ module.exports = {
                 'format': ['strictCamelCase', 'UPPER_CASE'],
             },
         ],
+
+        '@typescript-eslint/strict-boolean-expressions': ['error', {
+            allowNullableBoolean: true,
+            allowNullableString: true,
+        }],
     },
 }
