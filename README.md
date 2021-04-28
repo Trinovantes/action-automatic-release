@@ -32,7 +32,7 @@ If `auto_release_tag` is set, then this action will delete the previous release 
 ```
 - name: Update Nightly Build Release
   id: update_nightly
-  uses: Trinovantes/action-automatic-release@v2.0.0
+  uses: Trinovantes/action-automatic-release@master
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
