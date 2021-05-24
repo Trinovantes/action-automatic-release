@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import { GitHub } from '@actions/github/lib/utils'
 import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
 import { EOL } from 'os'
@@ -121,7 +120,7 @@ function generateChangeLogFromParsedCommits(parsedCommits: Array<ParsedCommit>):
 // ----------------------------------------------------------------------------
 
 export default class ChangeLog {
-    client: InstanceType<typeof GitHub>
+    client: Octokit
     context: Context
 
     parsedCommits: Array<ParsedCommit> = []

@@ -3,7 +3,7 @@ import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
 import { getAndValidateArgs, IArgs } from './Args'
 import ChangeLog from './ChangeLog'
-import { exportOutput, extractTagName, GitHubClient, searchPrevReleaseTag } from './utils'
+import { exportOutput, extractTagName, searchPrevReleaseTag } from './utils'
 
 // ----------------------------------------------------------------------------
 // AutomaticRelease
@@ -11,7 +11,7 @@ import { exportOutput, extractTagName, GitHubClient, searchPrevReleaseTag } from
 
 export default class AutomaticRelease {
     readonly args: IArgs
-    readonly client: GitHubClient
+    readonly client: Octokit
     readonly context: Context
 
     constructor() {

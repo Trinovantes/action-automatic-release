@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github/lib/utils'
 import { IGitHubTagResponse } from './GitHub'
 import { valid as semverValid, rcompare as semverRcompare, lt as semverLt } from 'semver'
+import { Octokit } from '@octokit/rest'
 
 export type GitHubClient = InstanceType<typeof GitHub>
 export type GitHubRepo = { owner: string; repo: string }
@@ -23,7 +24,7 @@ export function extractTagName(tagRef: string): string {
     return matches[2]
 }
 
-export async function searchPrevReleaseTag(ghClient: GitHubClient, ghRepo: GitHubRepo, currentTag: string): Promise<string | undefined> {
+export async function searchPrevReleaseTag(ghClient: Octokit, ghRepo: GitHubRepo, currentTag: string): Promise<string | undefined> {
     const validSemver = semverValid(currentTag)
     if (!validSemver) {
         throw new Error(`The currentTag "${currentTag}" does not appear to conform to semantic versioning.`)
