@@ -39,7 +39,7 @@
         "eslint-config-standard": "16",
         "eslint-plugin-import": "^2.22.0",
         "eslint-plugin-node": "^11.1.0",
-        "eslint-plugin-promise": "^4.2.1",
+        "eslint-plugin-promise": "^5.1.0",
         "terser-webpack-plugin": "^5.1.1",
         "ts-loader": "^9.2.2",
         "typescript": "^4.0.3",
