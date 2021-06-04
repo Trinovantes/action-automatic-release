@@ -14,6 +14,7 @@
         "noUnusedLocals": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
 
         "outDir": "dist",
         "baseUrl": ".",
@@ -26,7 +27,7 @@
         "dist",
     ],
     "include": [
-        "src/**/*",
+        "**/*",
         ".eslintrc.js",
         "webpack.config.ts",
     ],
