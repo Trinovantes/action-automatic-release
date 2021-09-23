@@ -13,7 +13,7 @@ void (async function main() {
         if (error instanceof Error) {
             core.setFailed(error.message)
         } else {
-            core.setFailed(error)
+            core.setFailed(error as string)
         }
     }
 })()
