@@ -1,6 +1,5 @@
 {
     "name": "action-automatic-release",
-    "version": "3.0.3",
     "license": "MIT",
     "private": true,
     "scripts": {
