@@ -40,7 +40,7 @@ export default class AutomaticRelease {
         let prevReleaseTag: string
 
         if (this.args.autoReleaseTag) {
-            currReleaseTag = this.args.autoReleaseTag
+            currReleaseTag = head
             prevReleaseTag = this.args.autoReleaseTag
         } else {
             const currentTag = extractTagName(this.context.ref)
@@ -58,7 +58,7 @@ export default class AutomaticRelease {
         core.startGroup('Generating release tags')
 
         const changeLog = new ChangeLog()
-        await changeLog.run(prevReleaseTag, head)
+        await changeLog.run(prevReleaseTag, currReleaseTag)
 
         core.endGroup()
 

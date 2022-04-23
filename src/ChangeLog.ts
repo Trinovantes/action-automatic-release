@@ -138,9 +138,9 @@ export default class ChangeLog {
         return generateChangeLogFromParsedCommits(this.parsedCommits)
     }
 
-    private async getCommitsSinceLastRelease(prevReleaseTag: string, headSha: string): Promise<Array<ParsedCommit>> {
+    private async getCommitsSinceLastRelease(prevRelease: string, currRelease: string): Promise<Array<ParsedCommit>> {
         try {
-            const prevRef = `tags/${prevReleaseTag}`
+            const prevRef = `tags/${prevRelease}`
 
             // Check if the tag exists
             // e.g. when we have an autoReleaseTag, the tag may not exist first time that this action runs
@@ -155,16 +155,16 @@ export default class ChangeLog {
                 throw error
             }
 
-            core.info(`Failed to verify "${prevReleaseTag}" exists. Assume that this is the first time this GitHub Action is being run.`)
-            prevReleaseTag = 'HEAD'
+            core.info(`Failed to verify "${prevRelease}" exists. Assume that this is the first time this GitHub Action is being run.`)
+            prevRelease = 'HEAD'
         }
 
         try {
-            core.info(`Retrieving commits between ${prevReleaseTag} and ${headSha}`)
+            core.info(`Retrieving commits between ${prevRelease} and ${currRelease}`)
             const compareResult = await this.client.repos.compareCommits({
                 ...this.context.repo,
-                base: prevReleaseTag,
-                head: headSha,
+                base: prevRelease,
+                head: currRelease,
             })
 
             const parsedCommits: Array<ParsedCommit> = []
@@ -200,10 +200,10 @@ export default class ChangeLog {
                 })
             }
 
-            core.info(`Successfully retrieved ${parsedCommits.length} commits between ${prevReleaseTag} and ${headSha}`)
+            core.info(`Successfully retrieved ${parsedCommits.length} commits between ${prevRelease} and ${currRelease}`)
             return parsedCommits
         } catch (e) {
-            throw new Error(`Failed to get commits between ${prevReleaseTag} and ${headSha}`)
+            throw new Error(`Failed to get commits between ${prevRelease} and ${currRelease}`)
         }
     }
 }
