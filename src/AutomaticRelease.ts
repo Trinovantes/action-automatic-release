@@ -75,11 +75,15 @@ export default class AutomaticRelease {
         // Create new release for the currReleaseTag
         // --------------------------------------------------------------------
 
-        const releaseName: string = (this.args.autoReleaseTag)
+        const releaseTag = this.args.autoReleaseTag
+            ? this.args.autoReleaseTag
+            : currReleaseTag
+
+        const releaseName = this.args.autoReleaseTag
             ? this.args.autoReleaseTitle || currReleaseTag
             : currReleaseTag
 
-        const { releaseId, uploadUrl } = await this.createRelease(currReleaseTag, releaseName, changeLog.toString())
+        const { releaseId, uploadUrl } = await this.createRelease(releaseTag, releaseName, changeLog.toString())
 
         // --------------------------------------------------------------------
         // Finally export the outputs
