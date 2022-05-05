@@ -6,7 +6,7 @@
         "dev": "  NODE_ENV=development webpack --watch",
         "build": "NODE_ENV=production  webpack",
         "start": "NODE_ENV=production  node -r dotenv/config dist/index.js",
-        "lint": "eslint --ext .ts,.js --ignore-path .gitignore ."
+        "lint": "tsc --noemit && eslint --ext .ts,.js --ignore-path .gitignore ."
     },
     "babel": {
         "presets": [
