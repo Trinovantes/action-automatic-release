@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github/lib/utils'
-import { IGitHubTagResponse } from './GitHub'
-import { valid as semverValid, rcompare as semverRcompare, lt as semverLt } from 'semver'
 import { Octokit } from '@octokit/rest'
+import { valid as semverValid, rcompare as semverRcompare, lt as semverLt } from 'semver'
+import { IGitHubTagResponse } from './GitHub'
 
 export type GitHubClient = InstanceType<typeof GitHub>
 export type GitHubRepo = { owner: string; repo: string }

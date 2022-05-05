@@ -1,7 +1,7 @@
+import { EOL } from 'os'
 import * as core from '@actions/core'
 import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
-import { EOL } from 'os'
 import { sync as commitParser } from 'conventional-commits-parser'
 
 // ----------------------------------------------------------------------------
