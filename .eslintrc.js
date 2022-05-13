@@ -14,7 +14,7 @@ module.exports = {
         parser: '@typescript-eslint/parser',
         project: path.resolve(__dirname, './tsconfig.json'),
         tsconfigRootDir: __dirname,
-        ecmaVersion: 2019, // Allows for the parsing of modern ECMAScript features
+        ecmaVersion: 2021, // Allows for the parsing of modern ECMAScript features
         sourceType: 'module', // Allows for the use of imports
     },
 
