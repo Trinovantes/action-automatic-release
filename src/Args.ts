@@ -8,7 +8,7 @@ export enum ArgName {
     BRANCH = 'branch',
 }
 
-export type IArgs = {
+export type Args = {
     autoReleaseTag: string
     autoReleaseTitle: string
     isDraft: boolean
@@ -16,8 +16,8 @@ export type IArgs = {
     branch: string
 }
 
-export function getAndValidateArgs(): IArgs {
-    const args: IArgs = {
+export function getAndValidateArgs(): Args {
+    const args: Args = {
         autoReleaseTag: core.getInput(ArgName.AUTO_RELEASE_TAG),
         autoReleaseTitle: core.getInput(ArgName.AUTO_RELEASE_TITLE),
         isDraft: core.getInput(ArgName.IS_DRAFT) === 'true',

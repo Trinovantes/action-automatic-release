@@ -1,48 +1,37 @@
 {
     "name": "action-automatic-release",
-    "license": "MIT",
     "private": true,
+    "license": "MIT",
     "scripts": {
         "dev": "  NODE_ENV=development webpack --watch",
         "build": "NODE_ENV=production  webpack",
-        "start": "NODE_ENV=production  node -r dotenv/config dist/index.js",
+        "start": "NODE_ENV=production  node dist/index.js",
         "lint": "tsc --noemit && eslint --ext .ts,.js --ignore-path .gitignore ."
     },
-    "babel": {
-        "presets": [
-            "@babel/preset-env",
-            "@babel/preset-typescript"
-        ]
-    },
-    "dependencies": {
+    "devDependencies": {
         "@actions/core": "^1.2.6",
         "@actions/github": "^5.0.0",
         "@octokit/rest": "^18.0.6",
-        "conventional-commits-parser": "^3.0.8",
-        "semver": "^7.3.2"
-    },
-    "devDependencies": {
-        "@babel/core": "^7.12.10",
-        "@babel/preset-env": "^7.12.11",
-        "@babel/preset-typescript": "^7.12.7",
-        "@babel/register": "^7.12.10",
         "@types/conventional-commits-parser": "^3.0.0",
-        "@types/node": "^12",
+        "@types/node": "^16",
         "@types/semver": "^7.3.4",
-        "@types/webpack": "5",
-        "@typescript-eslint/eslint-plugin": "^4.4.0",
-        "@typescript-eslint/parser": "^4.2.0",
-        "dotenv": "^10",
-        "eslint": "^7.9.0",
-        "eslint-config-standard": "16",
+        "@typescript-eslint/eslint-plugin": "^5.23.0",
+        "@typescript-eslint/parser": "^5.23.0",
+        "conventional-commits-parser": "^3.0.8",
+        "eslint": "^8.15.0",
+        "eslint-config-standard": "^17.0.0",
         "eslint-import-resolver-typescript": "^2.7.1",
-        "eslint-plugin-import": "^2.22.0",
+        "eslint-plugin-import": "^2.26.0",
+        "eslint-plugin-n": "^15.2.0",
         "eslint-plugin-node": "^11.1.0",
-        "eslint-plugin-promise": "^5.1.0",
+        "eslint-plugin-promise": "^6.0.0",
         "eslint-plugin-vue": "^8.7.1",
+        "semver": "^7.3.2",
         "ts-loader": "^9.2.2",
+        "ts-node": "^10.7.0",
+        "tunnel": "^0.0.6",
         "typescript": "^4.0.3",
-        "webpack": "5",
-        "webpack-cli": "4"
+        "webpack": "^5.72.1",
+        "webpack-cli": "^4.9.2"
     }
 }

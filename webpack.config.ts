@@ -1,10 +1,10 @@
 import path from 'path'
-import webpack from 'webpack'
+import type { Configuration } from 'webpack'
 
 const isDev = (process.env.NODE_ENV === 'development')
 const srcDir = path.resolve(__dirname, 'src')
 
-const config: webpack.Configuration = {
+const config: Configuration = {
     target: 'node',
     mode: isDev
         ? 'development'

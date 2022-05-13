@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import AutomaticRelease from './AutomaticRelease'
 
-void (async function main() {
+async function main() {
     try {
         if (!process.env.GITHUB_TOKEN) {
             throw new Error('process.env.GITHUB_TOKEN is undefined')
@@ -16,4 +16,6 @@ void (async function main() {
             core.setFailed(error as string)
         }
     }
-})()
+}
+
+main().catch(console.warn)

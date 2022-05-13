@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
-import { getAndValidateArgs, IArgs } from './Args'
+import { getAndValidateArgs, Args } from './Args'
 import ChangeLog from './ChangeLog'
 import { exportOutput, extractTagName, searchPrevReleaseTag } from './utils'
 
@@ -10,7 +10,7 @@ import { exportOutput, extractTagName, searchPrevReleaseTag } from './utils'
 // ----------------------------------------------------------------------------
 
 export default class AutomaticRelease {
-    readonly args: IArgs
+    readonly args: Args
     readonly client: Octokit
     readonly context: Context
 
@@ -121,7 +121,7 @@ export default class AutomaticRelease {
             const resp = await this.client.repos.getReleaseByTag({
                 owner: this.context.repo.owner,
                 repo: this.context.repo.repo,
-                tag: tag,
+                tag,
             })
 
             core.info(`Deleting release: ${resp.data.id}`)
@@ -159,7 +159,7 @@ export default class AutomaticRelease {
                 owner: this.context.repo.owner,
                 repo: this.context.repo.repo,
                 sha: head,
-                ref: ref,
+                ref,
             })
 
             core.info(`Successfully created release tag "${tag}"`)
@@ -230,7 +230,7 @@ export default class AutomaticRelease {
                 {
                     const resp = await this.client.repos.getReleaseByTag({
                         ...releaseConfig,
-                        tag: tag,
+                        tag,
                     })
 
                     releaseId = resp.data.id

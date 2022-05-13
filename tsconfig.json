@@ -1,8 +1,13 @@
 {
+    "ts-node": {
+        "compilerOptions": {
+            "module": "commonjs",
+        },
+    },
     "compilerOptions": {
         "strict": true,
 
-        "target": "es2019",
+        "target": "es2021",
         "module": "esnext",
         "moduleResolution": "node",
 
@@ -32,6 +37,5 @@
     "include": [
         "**/*",
         ".eslintrc.js",
-        "webpack.config.ts",
     ],
 }
