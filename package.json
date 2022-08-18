@@ -9,7 +9,7 @@
         "lint": "tsc --noemit && eslint --ext .ts,.js --ignore-path .gitignore ."
     },
     "devDependencies": {
-        "@actions/core": "^1.2.6",
+        "@actions/core": "^1.9.1",
         "@actions/github": "^5.0.0",
         "@octokit/rest": "^18.0.6",
         "@types/conventional-commits-parser": "^3.0.0",
