@@ -24,7 +24,7 @@ enum ConventionalCommitTypes {
     revert = 'Reverts',
 }
 
-interface ParsedCommit {
+type ParsedCommit = {
     isBreakingChange: boolean
     authorName: string
     htmlUrl: string

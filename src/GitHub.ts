@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 
-export interface GitHubTagResponse {
+export type GitHubTagResponse = {
     name: string
     zipball_url: string
     tarball_url: string
