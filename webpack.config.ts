@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { Configuration } from 'webpack'
+import { Configuration, optimize } from 'webpack'
 
 const isDev = (process.env.NODE_ENV === 'development')
 const srcDir = path.resolve(__dirname, 'src')
@@ -21,6 +21,12 @@ const config: Configuration = {
     optimization: {
         minimize: false,
     },
+
+    plugins: [
+        new optimize.LimitChunkCountPlugin({
+            maxChunks: 1,
+        }),
+    ],
 
     module: {
         rules: [
