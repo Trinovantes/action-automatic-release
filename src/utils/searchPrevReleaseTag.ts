@@ -1,27 +1,20 @@
-import * as core from '@actions/core'
 import { valid as semverValid, rcompare as semverRcompare, lt as semverLt } from 'semver'
-import type { GitHubTagResponse } from './GitHub'
-import type { GitHub } from '@actions/github/lib/utils'
-import type { Octokit } from '@octokit/rest'
+import { Octokit } from '@octokit/rest'
 
-export type GitHubClient = InstanceType<typeof GitHub>
-export type GitHubRepo = { owner: string; repo: string }
-
-export function exportOutput(name: string, value: string | number): void {
-    core.info(`Exporting env variable ${name}=${value}`)
-    core.exportVariable(name.toUpperCase(), value)
-    core.setOutput(name.toLowerCase(), value)
+type GitHubRepo = {
+    owner: string
+    repo: string
 }
 
-export function extractTagName(tagRef: string): string {
-    const re = /^(refs\/)?tags\/(.*)$/
-    const matches = re.exec(tagRef)
-
-    if (!matches || !matches[2]) {
-        throw new Error(`Reference "${tagRef}" does not appear to be a tag`)
+type GitHubTagResponse = {
+    name: string
+    zipball_url: string
+    tarball_url: string
+    commit: {
+        sha: string
+        url: string
     }
-
-    return matches[2]
+    node_id: string
 }
 
 export async function searchPrevReleaseTag(ghClient: Octokit, ghRepo: GitHubRepo, currentTag: string): Promise<string | undefined> {

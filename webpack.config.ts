@@ -1,5 +1,5 @@
-import path from 'path'
-import type { Configuration } from 'webpack'
+import path from 'node:path'
+import { Configuration } from 'webpack'
 
 const isDev = (process.env.NODE_ENV === 'development')
 const srcDir = path.resolve(__dirname, 'src')
@@ -16,6 +16,10 @@ const config: Configuration = {
 
     resolve: {
         extensions: ['.ts', '.js'],
+    },
+
+    optimization: {
+        minimize: false,
     },
 
     module: {

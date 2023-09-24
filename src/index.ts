@@ -13,9 +13,9 @@ async function main() {
         if (error instanceof Error) {
             core.setFailed(error.message)
         } else {
-            core.setFailed(error as string)
+            core.setFailed(String(error))
         }
     }
 }
 
-main().catch(console.warn)
+void main()

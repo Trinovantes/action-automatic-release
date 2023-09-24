@@ -2,8 +2,9 @@ import * as core from '@actions/core'
 import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
 import { getAndValidateArgs, Args } from './Args'
-import ChangeLog from './ChangeLog'
-import { exportOutput, extractTagName, searchPrevReleaseTag } from './utils'
+import { getTagName } from './utils/getTagName'
+import { searchPrevReleaseTag } from './utils/searchPrevReleaseTag'
+import { generateChangeLog } from './utils/generateChangeLog'
 
 // ----------------------------------------------------------------------------
 // AutomaticRelease
@@ -18,11 +19,10 @@ export default class AutomaticRelease {
         core.startGroup('Initializing AutomaticRelease')
 
         this.args = getAndValidateArgs()
-        console.log(this.args)
+        core.info(JSON.stringify(this.args))
 
         this.client = new Octokit({ auth: process.env.GITHUB_TOKEN })
         this.context = new Context()
-        console.log(`owner:${this.context.repo.owner} repo:${this.context.repo.repo}`)
 
         core.endGroup()
     }
@@ -43,12 +43,12 @@ export default class AutomaticRelease {
             currReleaseTag = head
             prevReleaseTag = this.args.autoReleaseTag
         } else {
-            const currentTag = extractTagName(this.context.ref)
+            const currentTag = getTagName(this.context.ref)
             currReleaseTag = currentTag
             prevReleaseTag = await searchPrevReleaseTag(this.client, this.context.repo, currentTag) ?? currentTag
         }
 
-        console.log(`currReleaseTag:${currReleaseTag} prevReleaseTag:${prevReleaseTag}`)
+        core.info(`currReleaseTag:${currReleaseTag} prevReleaseTag:${prevReleaseTag}`)
         core.endGroup()
 
         // --------------------------------------------------------------------
@@ -56,10 +56,7 @@ export default class AutomaticRelease {
         // --------------------------------------------------------------------
 
         core.startGroup('Generating release tags')
-
-        const changeLog = new ChangeLog()
-        await changeLog.run(prevReleaseTag, currReleaseTag)
-
+        const changeLog = await generateChangeLog(this.client, this.context, prevReleaseTag, currReleaseTag)
         core.endGroup()
 
         // --------------------------------------------------------------------
@@ -90,10 +87,11 @@ export default class AutomaticRelease {
         // --------------------------------------------------------------------
 
         core.startGroup('Exporting Outputs')
-        exportOutput('tag', currReleaseTag)
-        exportOutput('prev_tag', prevReleaseTag)
-        exportOutput('release_id', releaseId)
-        exportOutput('upload_url', uploadUrl)
+        core.setOutput('tag', currReleaseTag)
+        core.setOutput('prev_tag', prevReleaseTag)
+        core.setOutput('release_id', releaseId)
+        core.setOutput('upload_url', uploadUrl)
+        core.setOutput('upload_url', uploadUrl)
         core.endGroup()
     }
 
@@ -215,7 +213,7 @@ export default class AutomaticRelease {
             releaseId = resp.data.id
             uploadUrl = resp.data.upload_url
 
-            core.info(`Created release ${releaseId}: ${uploadUrl}`)
+            core.info(`Created release releaseId:"${releaseId}" uploadUrl:"${uploadUrl}"`)
         } catch (e) {
             const error = e as Error
 
