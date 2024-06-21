@@ -2,7 +2,7 @@ import { EOL } from 'node:os'
 import * as core from '@actions/core'
 import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
-import { sync as commitParser } from 'conventional-commits-parser'
+import { CommitParser } from 'conventional-commits-parser'
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -154,7 +154,8 @@ async function getCommitsBetweenReleases(client: Octokit, context: Context, prev
         for (const commit of compareResult.data.commits) {
             core.info(`Processing commit ${commit.sha}`)
 
-            const parsedCommit = commitParser(commit.commit.message)
+            const commitParser = new CommitParser()
+            const parsedCommit = commitParser.parse(commit.commit.message)
             if (parsedCommit.merge || parsedCommit.header?.startsWith('Merge')) {
                 core.info(`Skipping merge commit ${commit.sha}`)
                 continue
@@ -185,7 +186,11 @@ async function getCommitsBetweenReleases(client: Octokit, context: Context, prev
 
         core.info(`Successfully retrieved ${parsedCommits.length} commits between ${prevRelease} and ${currRelease}`)
         return parsedCommits
-    } catch (e) {
+    } catch (err) {
+        if (err instanceof Error) {
+            core.error(err.name)
+        }
+
         throw new Error(`Failed to get commits between ${prevRelease} and ${currRelease}`)
     }
 }
