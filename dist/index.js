@@ -34039,7 +34039,10 @@ async function getCommitsBetweenReleases(client, context, prevRelease, currRelea
         core.info(`Successfully retrieved ${parsedCommits.length} commits between ${prevRelease} and ${currRelease}`);
         return parsedCommits;
     }
-    catch (e) {
+    catch (err) {
+        if (err instanceof Error) {
+            core.error(err.name);
+        }
         throw new Error(`Failed to get commits between ${prevRelease} and ${currRelease}`);
     }
 }
@@ -34146,6 +34149,12 @@ class AutomaticRelease {
                 owner: this.context.repo.owner,
                 repo: this.context.repo.repo,
                 release_id: resp.data.id,
+            });
+            core.info(`Deleting reference: ${tag}`);
+            await this.client.rest.git.deleteRef({
+                owner: this.context.repo.owner,
+                repo: this.context.repo.repo,
+                ref: `tags/${tag}`,
             });
         }
         catch (e) {

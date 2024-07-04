@@ -128,6 +128,13 @@ export default class AutomaticRelease {
                 repo: this.context.repo.repo,
                 release_id: resp.data.id,
             })
+
+            core.info(`Deleting reference: ${tag}`)
+            await this.client.rest.git.deleteRef({
+                owner: this.context.repo.owner,
+                repo: this.context.repo.repo,
+                ref: `tags/${tag}`,
+            })
         } catch (e) {
             const error = e as Error
 
