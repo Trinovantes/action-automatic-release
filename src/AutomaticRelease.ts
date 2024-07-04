@@ -136,10 +136,9 @@ export default class AutomaticRelease {
                 ref: `tags/${tag}`,
             })
         } catch (e) {
-            const error = e as Error
-
             // Not Found errors are acceptable because it can happen on first run when there's no release associated with the tag yet
-            if (error.message !== 'Not Found') {
+            const error = e as Error
+            if (!error.message.includes('Not Found')) {
                 core.error(`Could not delete release with tag "${tag}" (${error.message})`)
                 throw error
             }

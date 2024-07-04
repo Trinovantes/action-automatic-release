@@ -33995,10 +33995,11 @@ async function getCommitsBetweenReleases(client, context, prevRelease, currRelea
     catch (e) {
         // Not Found errors are acceptable because it's the first release
         const error = e;
-        if (error.message !== 'Not Found') {
+        if (!error.message.includes('Not Found')) {
+            core.error(`Failed to get reference for tag "${prevRelease}" (${error.message})`);
             throw error;
         }
-        core.info(`Failed to verify "${prevRelease}" exists. Assume that this is the first time this GitHub Action is being run.`);
+        core.info(`Failed to verify tag "${prevRelease}" exists. Assume that this is the first time this GitHub Action is being run.`);
         prevRelease = 'HEAD';
     }
     try {
@@ -34158,9 +34159,9 @@ class AutomaticRelease {
             });
         }
         catch (e) {
-            const error = e;
             // Not Found errors are acceptable because it can happen on first run when there's no release associated with the tag yet
-            if (error.message !== 'Not Found') {
+            const error = e;
+            if (!error.message.includes('Not Found')) {
                 core.error(`Could not delete release with tag "${tag}" (${error.message})`);
                 throw error;
             }
