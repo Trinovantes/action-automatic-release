@@ -189,7 +189,7 @@ async function getCommitsBetweenReleases(client: Octokit, context: Context, prev
         return parsedCommits
     } catch (err) {
         if (err instanceof Error) {
-            core.error(err.name)
+            core.error(err)
         }
 
         throw new Error(`Failed to get commits between ${prevRelease} and ${currRelease}`)
