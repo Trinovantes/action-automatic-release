@@ -1,6 +1,6 @@
 name: Automatic Release
 author: Trinovantes
-description: Automatically creates a GitHub release with changelog
+description: Automatically creates a GitHub release with ChangeLog
 
 inputs:
   auto_release_tag:
@@ -25,13 +25,34 @@ inputs:
 outputs:
   tag:
     description: The release tag this action just created/updated
+    value: ${{ steps.main.outputs.tag }}
   prev_tag:
     description: The release tag this action just upgraded from
+    value: ${{ steps.main.outputs.prev_tag }}
   release_id:
     description: The id of the release this action just created
+    value: ${{ steps.main.outputs.release_id }}
   upload_url:
     description: The upload url of the release this action just created
+    value: ${{ steps.main.outputs.upload_url }}
 
 runs:
-  using: node20
-  main: dist/index.js
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+
+    - run: |-
+        cd ${{ github.action_path }}
+        bun install
+        cd -
+      shell: bash
+
+    - id: main
+      run: bun run ${{ github.action_path }}/src/main.ts
+      shell: bash
+      env:
+        auto_release_tag: ${{ inputs.auto_release_tag }}
+        auto_release_title: ${{ inputs.auto_release_title }}
+        is_draft: ${{ inputs.is_draft }}
+        is_prerelease: ${{ inputs.is_prerelease }}
+        branch: ${{ inputs.branch }}

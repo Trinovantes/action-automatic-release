@@ -1,33 +1,29 @@
 {
     "name": "action-automatic-release",
-    "private": true,
-    "license": "MIT",
+    "type": "module",
     "scripts": {
-        "dev": "  NODE_ENV=development webpack --watch",
-        "build": "NODE_ENV=production  webpack",
-        "start": "NODE_ENV=production  node dist/index.js",
-        "lint": "tsc --noemit && eslint"
+        "start": "bun run src/main.ts",
+        "lint": "vue-tsc --noemit && eslint"
+    },
+    "dependencies": {
+        "@actions/core": "^1.11.1",
+        "@actions/github": "^6.0.0",
+        "@octokit/rest": "^21.0.2",
+        "@types/conventional-commits-parser": "^5.0.0",
+        "@types/semver": "^7.5.8",
+        "@types/node": "^20.16.11",
+        "conventional-commits-parser": "^6.0.0",
+        "semver": "^7.6.3"
     },
     "devDependencies": {
-        "@actions/core": "^1.9.1",
-        "@actions/github": "^6.0.0",
-        "@eslint/compat": "^1.1.0",
-        "@eslint/js": "^9.4.0",
-        "@octokit/rest": "^21.0.0",
-        "@stylistic/eslint-plugin": "^2.1.0",
-        "@types/conventional-commits-parser": "^5.0.0",
-        "@types/node": "^20.6.4",
-        "@types/semver": "^7.3.4",
-        "conventional-commits-parser": "^6.0.0",
-        "eslint": "^9.4.0",
-        "eslint-plugin-n": "^17.7.0",
-        "eslint-plugin-vue": "^9.9.0",
-        "semver": "^7.3.2",
-        "ts-loader": "^9.2.2",
-        "ts-node": "^10.7.0",
-        "typescript": "^5.0.2",
-        "typescript-eslint": "^8.0.0-alpha.24",
-        "webpack": "^5.72.1",
-        "webpack-cli": "^5.0.1"
+        "@eslint/compat": "^1.2.0",
+        "@eslint/js": "^9.12.0",
+        "@stylistic/eslint-plugin": "^2.9.0",
+        "eslint": "^9.12.0",
+        "eslint-plugin-n": "^17.11.1",
+        "eslint-plugin-vue": "^9.29.0",
+        "typescript": "^5.6.3",
+        "typescript-eslint": "^8.9.0",
+        "vue-tsc": "^2.1.6"
     }
 }

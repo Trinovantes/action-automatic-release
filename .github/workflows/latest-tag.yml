@@ -1,20 +1,42 @@
-name: Latest Tag
+name: Update Release
 
 on:
+  workflow_dispatch:
   push:
+    branches:
+      - master
     tags:
-      - 'v*'
+      - v*
+    paths-ignore:
+      - README.md
+      - .vscode
+      - .editorconfig
+      - .gitignore
+
+permissions:
+  contents: write # Allow workflow to create release
+  pull-requests: read # Allow workflow to read pull requests related to release's commits
 
 jobs:
-  latest_tag:
-    name: Latest Tag
+  update_release:
+    name: Update Release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Update Current Release
+      - name: Update auto tag release
+        uses: Trinovantes/action-automatic-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          auto_release_tag: latest
+          auto_release_title: Latest
+          is_prerelease: false
+
+      - if: startsWith(github.ref, 'refs/tags/')
+        name: Update current tag release
         uses: Trinovantes/action-automatic-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
