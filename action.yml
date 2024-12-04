@@ -42,13 +42,13 @@ runs:
     - uses: oven-sh/setup-bun@v2
 
     - run: |-
-        cd ${{ github.action_path }}
+        cd "${{ github.action_path }}"
         bun install
         cd -
       shell: bash
 
     - id: main
-      run: bun run ${{ github.action_path }}/src/main.ts
+      run: bun run "${{ github.action_path }}/src/main.ts"
       shell: bash
       env:
         auto_release_tag: ${{ inputs.auto_release_tag }}
