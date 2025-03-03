@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { Context } from '@actions/github/lib/context'
 import { Octokit } from '@octokit/rest'
 import { getActionArgs, ActionArgs } from './ActionArgs.js'
-import { ConventionalCommitTypes, ParsedCommit } from './ParsedCommit.js'
+import { ALL_COMMIT_TYPES, ParsedCommit } from './ParsedCommit.js'
 import { valid as semverValid, rcompare as semverRcompare, lt as semverLt } from 'semver'
 import { EOL } from 'node:os'
 import { CommitParser } from 'conventional-commits-parser'
@@ -219,17 +219,13 @@ export default class AutomaticRelease {
             })
 
             // Labelled Changes
-            for (const [key, label] of Object.entries(ConventionalCommitTypes)) {
+            for (const { key, label } of ALL_COMMIT_TYPES) {
                 writeToChangeLog(parsedCommits, label, (commit) => commit.type === key)
             }
 
             // Unlabelled Changes
-            writeToChangeLog(parsedCommits, 'Commits', (commit) => {
-                if (commit.type) {
-                    return !(commit.type in ConventionalCommitTypes)
-                }
-                return true
-            })
+            const commitTypeKeys = ALL_COMMIT_TYPES.map((t) => t.key)
+            writeToChangeLog(parsedCommits, 'Commits', (commit) => !commit.type || !commitTypeKeys.includes(commit.type))
 
             changeLog = changeLog.trim()
 

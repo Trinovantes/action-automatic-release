@@ -1,16 +1,49 @@
-export enum ConventionalCommitTypes {
-    feat = 'Features',
-    fix = 'Bug Fixes',
-    docs = 'Documentation',
-    style = 'Styles',
-    refactor = 'Code Refactoring',
-    perf = 'Performance Improvements',
-    test = 'Tests',
-    build = 'Builds',
-    ci = 'Continuous Integration',
-    chore = 'Chores',
-    revert = 'Reverts',
-}
+export const ALL_COMMIT_TYPES = [
+    {
+        key: 'feat',
+        label: 'Features',
+    },
+    {
+        key: 'fix',
+        label: 'Bug Fixes',
+    },
+    {
+        key: 'docs',
+        label: 'Documentation',
+    },
+    {
+        key: 'style',
+        label: 'Styles',
+    },
+    {
+        key: 'refactor',
+        label: 'Code Refactoring',
+    },
+    {
+        key: 'perf',
+        label: 'Performance Improvements',
+    },
+    {
+        key: 'test',
+        label: 'Tests',
+    },
+    {
+        key: 'build',
+        label: 'Builds',
+    },
+    {
+        key: 'ci',
+        label: 'Continuous Integration',
+    },
+    {
+        key: 'chore',
+        label: 'Chores',
+    },
+    {
+        key: 'revert',
+        label: 'Reverts',
+    },
+]
 
 export type ParsedCommit = {
     authorName: string
