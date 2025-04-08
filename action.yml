@@ -39,16 +39,24 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: oven-sh/setup-bun@v2
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10
+        run_install: false
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
 
     - run: |-
         cd "${{ github.action_path }}"
-        bun install
+        pnpm install --frozen-lockfile
         cd -
       shell: bash
 
     - id: main
-      run: bun run "${{ github.action_path }}/src/main.ts"
+      run: node "${{ github.action_path }}/src/main.ts"
       shell: bash
       env:
         auto_release_tag: ${{ inputs.auto_release_tag }}

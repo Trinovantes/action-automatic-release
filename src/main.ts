@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import AutomaticRelease from './AutomaticRelease.js'
+import AutomaticRelease from './AutomaticRelease.ts'
 
 try {
     const githubToken = process.env.GITHUB_TOKEN

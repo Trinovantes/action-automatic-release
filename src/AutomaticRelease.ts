@@ -1,12 +1,12 @@
 import * as core from '@actions/core'
-import { Context } from '@actions/github/lib/context'
+import { Context } from '@actions/github/lib/context.js'
 import { Octokit } from '@octokit/rest'
-import { getActionArgs, ActionArgs } from './ActionArgs.js'
-import { ALL_COMMIT_TYPES, ParsedCommit } from './ParsedCommit.js'
+import { getActionArgs, type ActionArgs } from './ActionArgs.ts'
+import { ALL_COMMIT_TYPES, type ParsedCommit } from './ParsedCommit.ts'
 import { valid as semverValid, rcompare as semverRcompare, lt as semverLt } from 'semver'
 import { EOL } from 'node:os'
 import { CommitParser } from 'conventional-commits-parser'
-import { Brand } from '@/@types/Brand'
+import type { Brand } from './@types/Brand.ts'
 
 const SHORT_SHA_LEN = 8
 
@@ -154,7 +154,7 @@ export default class AutomaticRelease {
     }
 
     private async getHeadHash(): Promise<CommitHash> {
-        return await runAsyncGroup('Determining head ref', async() => {
+        return await runAsyncGroup('Determining head ref', async () => {
             const res = await this.ghClient.git.getRef({
                 owner: this.ghContext.repo.owner,
                 repo: this.ghContext.repo.repo,
@@ -195,7 +195,7 @@ export default class AutomaticRelease {
     }
 
     private async generateChangeLog(prevReleaseTag: TagName, currRelease: TagName | CommitHash) {
-        return await runAsyncGroup('Generating ChangeLog', async() => {
+        return await runAsyncGroup('Generating ChangeLog', async () => {
             let changeLog = ''
             const writeToChangeLog = (parsedCommits: Array<ParsedCommit>, label: string, filter: (c: ParsedCommit) => boolean) => {
                 const filteredCommitLogs = parsedCommits
@@ -289,7 +289,7 @@ export default class AutomaticRelease {
             return
         }
 
-        await runAsyncGroup(`Deleting release associated with tag "${tag}"`, async() => {
+        await runAsyncGroup(`Deleting release associated with tag "${tag}"`, async () => {
             const releaseId = await this.getReleaseId(tag)
             if (!releaseId) {
                 return
@@ -314,7 +314,7 @@ export default class AutomaticRelease {
             return
         }
 
-        await runAsyncGroup(`Creating or updating tag "${tag}"`, async() => {
+        await runAsyncGroup(`Creating or updating tag "${tag}"`, async () => {
             const tagExists = await this.getTagHash(`tags/${tag}`)
             if (tagExists) {
                 core.info(`Attempting to update existing tag "${tag}"`)
@@ -347,7 +347,7 @@ export default class AutomaticRelease {
             }
         }
 
-        return await runAsyncGroup(`Create or update release for the "${tag}" tag`, async() => {
+        return await runAsyncGroup(`Create or update release for the "${tag}" tag`, async () => {
             const releaseConfig = {
                 owner: this.ghContext.repo.owner,
                 repo: this.ghContext.repo.repo,
