@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { Context } from '@actions/github/lib/context.js'
+import { context } from '@actions/github'
 import { Octokit } from '@octokit/rest'
 import { getActionArgs, type ActionArgs } from './ActionArgs.ts'
 import { ALL_COMMIT_TYPES, type ParsedCommit } from './ParsedCommit.ts'
@@ -36,7 +36,7 @@ export default class AutomaticRelease {
     readonly isDryRun: boolean
     readonly actionArgs: ActionArgs
     readonly ghClient: Octokit
-    readonly ghContext: Context
+    readonly ghContext: typeof context
 
     constructor(params: {
         githubToken: string
@@ -45,7 +45,7 @@ export default class AutomaticRelease {
         this.isDryRun = params.isDryRun ?? false
         this.actionArgs = getActionArgs()
         this.ghClient = new Octokit({ auth: params.githubToken })
-        this.ghContext = new Context()
+        this.ghContext = context
     }
 
     // ----------------------------------------------------------------------------
