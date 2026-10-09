@@ -175,7 +175,7 @@ export default class AutomaticRelease {
         }
 
         const listTagsOptions = this.ghClient.repos.listTags.endpoint.merge(this.ghContext.repo)
-        const allTags = await this.ghClient.paginate(listTagsOptions) as Array<GitHubTagResponse>
+        const allTags = await this.ghClient.paginate<GitHubTagResponse>(listTagsOptions)
         const semverTags = allTags
             .filter((tag) => semverValid(tag.name))
             .map((tag) => ({
